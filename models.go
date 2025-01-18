@@ -49,8 +49,6 @@ type OldTrip struct {
 	VehicleConfigId string    `csv:"vehicle_config_id"`
 }
 
-// TripPart == 0; isLast == 0; TripId == Tag
-
 type NewTrip struct {
 	Imei                 string  `csv:"imei"`
 	VehicleId            string  `csv:"vehicle_id"`
@@ -61,7 +59,7 @@ type NewTrip struct {
 	IsLast               string  `csv:"is_last"`
 	Latitude             float64 `csv:"latitude"`
 	Longitude            float64 `csv:"longitude"`
-	Timestamp            int64   `csv:"timestamp"`
+	Timestamp            string  `csv:"timestamp"`
 	Speed                int64   `csv:"speed"`
 	Idle                 int64   `csv:"idle"`
 	Elapsed              int64   `csv:"elapsed"`
