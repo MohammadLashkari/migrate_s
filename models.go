@@ -7,6 +7,11 @@ type (
 	TimeStamp []int64
 )
 
+type Tracker struct {
+	Id   string `csv:"_id"`
+	Imei string `csv:"imei"`
+}
+
 type OldTrip struct {
 	// Owner                     string `csv:"owner"`
 	// Clients                   string `csv:"clients"`

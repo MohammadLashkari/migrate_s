@@ -13,24 +13,42 @@ import (
 
 func main() {
 
-	input := flag.String("in", "./trip_test.csv", "input csv file path")
+	tripPath := flag.String("trip", "./trip_test.csv", "input trips csv file path")
+	trackerPath := flag.String("tracker", "./tracker_test.csv", "input trackers csv file path")
 
-	baseName := filepath.Base(*input)
+	baseName := filepath.Base(*tripPath)
 	ext := filepath.Ext(baseName)
 	nameWithoutExt := baseName[:len(baseName)-len(ext)]
-	outputDefault := nameWithoutExt + "_result" + ext
+	defaultOutput := nameWithoutExt + "_result" + ext
 
-	output := flag.String("out", outputDefault, "output csv file path")
+	output := flag.String("out", defaultOutput, "output csv file path")
 	flag.Parse()
 
-	file, err := os.Open(*input)
+	tripFile, err := os.Open(*tripPath)
 	if err != nil {
-		log.Fatalf("failed to open %s : %v", *input, err)
+		log.Fatalf("failed to open trip file : %v", err)
 	}
-	defer file.Close()
+	defer tripFile.Close()
+
+	trackerFile, err := os.Open(*trackerPath)
+	if err != nil {
+		log.Fatalf("failed to open tracker file : %v", err)
+	}
+	defer trackerFile.Close()
+
+	trackers := []*Tracker{}
+	if err := gocsv.UnmarshalFile(trackerFile, &trackers); err != nil {
+		log.Fatalf("failed unmarshal trackers: %v", err)
+	}
+
+	imeiToId := make(map[string]string)
+
+	for _, tracker := range trackers {
+		imeiToId[tracker.Imei] = tracker.Id
+	}
 
 	oldTrips := []*OldTrip{}
-	if err := gocsv.UnmarshalFile(file, &oldTrips); err != nil {
+	if err := gocsv.UnmarshalFile(tripFile, &oldTrips); err != nil {
 		log.Fatalf("failed unmarshal old trip: %v", err)
 	}
 
@@ -54,8 +72,7 @@ func main() {
 				Speed:                getSafeValue(t.Speeds, i, 0),
 				Idle:                 getSafeValue(t.Idles, i, 0),
 				Timestamp:            time.Unix(getSafeValue(t.Timestamps, i, 0), 0).Format(time.RFC3339),
-				// ASK
-				// TrackerId: ,
+				TrackerId:            imeiToId[t.Imei],
 			}
 			if i == 0 {
 				nt.Speed = 0
