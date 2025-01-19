@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gocarina/gocsv"
@@ -15,13 +14,7 @@ func main() {
 
 	tripPath := flag.String("trip", "./trip_test.csv", "input trips csv file path")
 	trackerPath := flag.String("tracker", "./tracker_test.csv", "input trackers csv file path")
-
-	baseName := filepath.Base(*tripPath)
-	ext := filepath.Ext(baseName)
-	nameWithoutExt := baseName[:len(baseName)-len(ext)]
-	defaultOutput := nameWithoutExt + "_result" + ext
-
-	output := flag.String("out", defaultOutput, "output csv file path")
+	output := flag.String("out", "result.csv", "output csv file path")
 	flag.Parse()
 
 	tripFile, err := os.Open(*tripPath)
@@ -80,7 +73,7 @@ func main() {
 				Latitude:             geo[1],
 				Speed:                getSafeValue(t.Speeds, i, 0),
 				Idle:                 getSafeValue(t.Idles, i, 0),
-				Timestamp:            time.Unix(getSafeValue(t.Timestamps, i, 0), 0).Format(time.RFC3339),
+				Timestamp:            time.Unix(getSafeValue(t.Timestamps, i, 0), 0).Format("2006-01-02 15:04:05.000"),
 				TrackerId:            imeiToId[t.Imei],
 			}
 			if i == 0 {
