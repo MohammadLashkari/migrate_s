@@ -52,7 +52,16 @@ func main() {
 		log.Fatalf("failed unmarshal old trip: %v", err)
 	}
 
-	newTrips := []*NewTrip{}
+	outFile, err := os.Create(*output)
+	if err != nil {
+		log.Fatalf("failed to create CSV result: %v", err)
+	}
+	defer outFile.Close()
+
+	// newTrips := []*NewTrip{}
+	if err := gocsv.MarshalFile(&[]*NewTrip{}, outFile); err != nil {
+		log.Fatalf("failed to  write to CSV result: %v", err)
+	}
 	for _, t := range oldTrips {
 		for i, geo := range t.Geometries {
 			nt := &NewTrip{
@@ -86,19 +95,16 @@ func main() {
 				_, nt.TraveledDistance, _ = geodist.VincentyDistance(current, before)
 
 			}
-			newTrips = append(newTrips, nt)
+			if err := gocsv.MarshalWithoutHeaders(&[]*NewTrip{nt}, outFile); err != nil {
+				log.Fatalf("failed to  write to CSV result: %v", err)
+			}
+			// newTrips = append(newTrips, nt)
 		}
 	}
 
-	outFile, err := os.Create(*output)
-	if err != nil {
-		log.Fatalf("failed to create CSV result: %v", err)
-	}
-	defer outFile.Close()
-
-	if err := gocsv.MarshalFile(&newTrips, outFile); err != nil {
-		log.Fatalf("failed to  write to CSV result: %v", err)
-	}
+	// if err := gocsv.MarshalFile(&newTrips, outFile); err != nil {
+	// 	log.Fatalf("failed to  write to CSV result: %v", err)
+	// }
 
 	log.Println("CSV result written successfully")
 }
