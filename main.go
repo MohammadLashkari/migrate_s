@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -14,7 +16,7 @@ func main() {
 
 	tripPath := flag.String("trip", "./trip_test.csv", "input trips csv file path")
 	trackerPath := flag.String("tracker", "./tracker_test.csv", "input trackers csv file path")
-	output := flag.String("out", "result.csv", "output csv file path")
+	// output := flag.String("out", "result.csv", "output csv file path")
 	flag.Parse()
 
 	tripFile, err := os.Open(*tripPath)
@@ -45,16 +47,19 @@ func main() {
 		log.Fatalf("failed unmarshal old trip: %v", err)
 	}
 
-	outFile, err := os.Create(*output)
-	if err != nil {
-		log.Fatalf("failed to create CSV result: %v", err)
-	}
-	defer outFile.Close()
+	slog.Info("--------finished parsing")
 
-	// newTrips := []*NewTrip{}
-	if err := gocsv.MarshalFile(&[]*NewTrip{}, outFile); err != nil {
-		log.Fatalf("failed to  write to CSV result: %v", err)
-	}
+	// outFile, err := os.Create(*output)
+	// if err != nil {
+	// 	log.Fatalf("failed to create CSV result: %v", err)
+	// }
+	// defer outFile.Close()
+
+	// if err := gocsv.MarshalFile(&[]*NewTrip{}, outFile); err != nil {
+	// 	log.Fatalf("failed to  write to CSV result: %v", err)
+	// }
+
+	newTrips := []*NewTrip{}
 	for _, t := range oldTrips {
 		for i, geo := range t.Geometries {
 			nt := &NewTrip{
@@ -88,12 +93,18 @@ func main() {
 				_, nt.TraveledDistance, _ = geodist.VincentyDistance(current, before)
 
 			}
-			if err := gocsv.MarshalWithoutHeaders(&[]*NewTrip{nt}, outFile); err != nil {
-				log.Fatalf("failed to  write to CSV result: %v", err)
-			}
-			// newTrips = append(newTrips, nt)
+			// if err := gocsv.MarshalWithoutHeaders(&[]*NewTrip{nt}, outFile); err != nil {
+			// 	log.Fatalf("failed to  write to CSV result: %v", err)
+			// }
+			newTrips = append(newTrips, nt)
 		}
 	}
+
+	csvContent, err := gocsv.MarshalString(&newTrips)
+	if err != nil {
+		log.Fatalf("failed to  write to CSV result: %v", err)
+	}
+	fmt.Println(csvContent)
 
 	// if err := gocsv.MarshalFile(&newTrips, outFile); err != nil {
 	// 	log.Fatalf("failed to  write to CSV result: %v", err)
