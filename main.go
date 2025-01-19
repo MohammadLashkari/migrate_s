@@ -2,11 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/gocarina/gocsv"
 	"github.com/jftuga/geodist"
@@ -16,7 +14,7 @@ func main() {
 
 	tripPath := flag.String("trip", "./trip_test.csv", "input trips csv file path")
 	trackerPath := flag.String("tracker", "./tracker_test.csv", "input trackers csv file path")
-	// output := flag.String("out", "result.csv", "output csv file path")
+	output := flag.String("out", "result.csv", "output csv file path")
 	flag.Parse()
 
 	tripFile, err := os.Open(*tripPath)
@@ -49,16 +47,6 @@ func main() {
 
 	slog.Info("--------finished parsing")
 
-	// outFile, err := os.Create(*output)
-	// if err != nil {
-	// 	log.Fatalf("failed to create CSV result: %v", err)
-	// }
-	// defer outFile.Close()
-
-	// if err := gocsv.MarshalFile(&[]*NewTrip{}, outFile); err != nil {
-	// 	log.Fatalf("failed to  write to CSV result: %v", err)
-	// }
-
 	newTrips := []*NewTrip{}
 	for _, t := range oldTrips {
 		for i, geo := range t.Geometries {
@@ -78,7 +66,7 @@ func main() {
 				Latitude:             geo[1],
 				Speed:                getSafeValue(t.Speeds, i, 0),
 				Idle:                 getSafeValue(t.Idles, i, 0),
-				Timestamp:            time.Unix(getSafeValue(t.Timestamps, i, 0), 0).Format("2006-01-02 15:04:05.000"),
+				Timestamp:            getSafeValue(t.Timestamps, i, 0),
 				TrackerId:            imeiToId[t.Imei],
 			}
 			if i == 0 {
@@ -87,28 +75,30 @@ func main() {
 				nt.TraveledDistance = 0
 				nt.Elapsed = 0
 			} else {
-				nt.Elapsed = t.Timestamps[i] - t.Timestamps[i-1]
+				if len(t.Timestamps) > i {
+					nt.Elapsed = t.Timestamps[i] - t.Timestamps[i-1]
+				} else {
+					nt.Elapsed = 0
+				}
 				current := geodist.Coord{Lon: geo[0], Lat: geo[1]}
 				before := geodist.Coord{Lon: t.Geometries[i-1][0], Lat: t.Geometries[i-1][1]}
-				_, nt.TraveledDistance, _ = geodist.VincentyDistance(current, before)
+				_, dis, _ := geodist.VincentyDistance(current, before)
+				nt.TraveledDistance = int32(dis * 1000)
 
 			}
-			// if err := gocsv.MarshalWithoutHeaders(&[]*NewTrip{nt}, outFile); err != nil {
-			// 	log.Fatalf("failed to  write to CSV result: %v", err)
-			// }
 			newTrips = append(newTrips, nt)
 		}
 	}
 
-	csvContent, err := gocsv.MarshalString(&newTrips)
+	outFile, err := os.Create(*output)
 	if err != nil {
+		log.Fatalf("failed to create CSV result: %v", err)
+	}
+	defer outFile.Close()
+
+	if err := gocsv.MarshalFile(&newTrips, outFile); err != nil {
 		log.Fatalf("failed to  write to CSV result: %v", err)
 	}
-	fmt.Println(csvContent)
-
-	// if err := gocsv.MarshalFile(&newTrips, outFile); err != nil {
-	// 	log.Fatalf("failed to  write to CSV result: %v", err)
-	// }
 
 	log.Println("CSV result written successfully")
 }

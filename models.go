@@ -64,16 +64,16 @@ type NewTrip struct {
 	IsLast               string  `csv:"is_last"`
 	Latitude             float64 `csv:"latitude"`
 	Longitude            float64 `csv:"longitude"`
-	Timestamp            string  `csv:"timestamp"`
+	Timestamp            int64   `csv:"timestamp"`
 	Speed                int64   `csv:"speed"`
 	Idle                 int64   `csv:"idle"`
 	Elapsed              int64   `csv:"elapsed"`
 	PerPointIdle         string  `csv:"per_point_idle"`
-	TraveledDistance     float64 `csv:"traveled_distance"`
+	TraveledDistance     int32   `csv:"traveled_distance"`
 	LocOutlier           string  `csv:"loc_outlier"`
 	VehicleVersion       string  `csv:"vehicle_version"`
 	VehicleConfigVersion string  `csv:"vehicle_config_version"`
 	TrackerVersion       string  `csv:"tracker_version"`
 	DriverId             string  `csv:"driver_id"`
-	// UpdateId             string `csv:"update_id"`
+	UpdateId             int32   `csv:"update_id"`
 }
